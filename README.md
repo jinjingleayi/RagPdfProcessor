@@ -6,7 +6,7 @@ A complete RAG (Retrieval-Augmented Generation) system for intelligent PDF docum
 
 ### 📄 PDF Processing
 - **Text Extraction**: Automatically extracts and intelligently chunks text from PDFs
-- **Image Processing**: Extracts images and generates descriptions using vision models
+- **Image Processing**: Extracts images and generates descriptions
 - **Table Processing**: Extracts tables and converts them to structured descriptions
 
 ### 🔍 Intelligent Retrieval
@@ -23,6 +23,7 @@ A complete RAG (Retrieval-Augmented Generation) system for intelligent PDF docum
 - Generates accurate answers based on retrieved documents
 - Provides source citations
 - Supports multi-turn conversations
+- Works with Ollama (FREE local LLM) or OpenAI
 
 ## 🏗️ System Architecture
 
@@ -35,14 +36,14 @@ A complete RAG (Retrieval-Augmented Generation) system for intelligent PDF docum
 ┌─────────────────────────────┐
 │  Document Processing         │
 │  - Text chunking             │
-│  - Image extraction & desc.  │
-│  - Table extraction & desc.  │
+│  - Image extraction          │
+│  - Table extraction          │
 └──────┬──────────────────────┘
        │
        ▼
 ┌─────────────────────────────┐
 │  Vectorization               │
-│  - Generate text embeddings  │
+│  - Generate embeddings       │
 └──────┬──────────────────────┘
        │
        ▼
@@ -86,250 +87,224 @@ A complete RAG (Retrieval-Augmented Generation) system for intelligent PDF docum
 ### 1. System Requirements
 
 - Python 3.8+
-- Elasticsearch 8.x
+- Elasticsearch 9.x
 - Sufficient memory (8GB+ recommended)
 
 ### 2. Install Elasticsearch
 
-**macOS (using Homebrew):**
+Elasticsearch provides powerful vector search capabilities essential for RAG systems.
+
+**Quick Installation Method:**
+
 ```bash
-brew tap elastic/tap
-brew install elastic/tap/elasticsearch-full
+curl -fsSL https://elastic.co/start-local | sh
+```
 
-# Start Elasticsearch
-brew services start elasticsearch
+For more details, see the [official Elasticsearch local development guide](https://www.elastic.co/docs/deploy-manage/deploy/self-managed/local-development-installation-quickstart).
 
-# Verify installation
+**Get Elasticsearch Password and API Key:**
+
+After installation, retrieve your credentials:
+
+```bash
+cat elastic-start-local/.env | grep ES_LOCAL_PASSWORD
+cat elastic-start-local/.env | grep ES_LOCAL_API_KEY
+```
+
+**Verify Installation:**
+
+```bash
 curl http://localhost:9200
 ```
 
-**Linux:**
+You should see cluster information in JSON format.
+
+### 3. Clone This Repository
+
 ```bash
-wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-8.11.0-linux-x86_64.tar.gz
-tar -xzf elasticsearch-8.11.0-linux-x86_64.tar.gz
-cd elasticsearch-8.11.0/
-./bin/elasticsearch
+git clone https://github.com/jinjingleayi/RagPdfProcessor.git
+cd RagPdfProcessor
 ```
 
-### 3. Install Python Dependencies
+### 4. Install Python Dependencies
 
 ```bash
-cd ~/Qishi\ AI/RAG_pdfProcess
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
-
-Create a `.env` file in the project root:
+Or use a virtual environment (recommended):
 
 ```bash
-# OpenAI API (for answer generation)
-OPENAI_API_KEY=your-api-key-here
-OPENAI_BASE_URL=https://api.openai.com/v1
-
-# Optional: Elasticsearch authentication
-ES_USERNAME=elastic
-ES_PASSWORD=your-password
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
 ```
 
-### 5. Configure System Settings
+### 5. Install Ollama (FREE Local LLM)
 
-Edit `src/config.py` to customize settings:
+**For macOS:**
+```bash
+# Download from https://ollama.com/download
+# Or use Homebrew:
+brew install ollama
+```
+
+**For Linux:**
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+**For Windows:**
+Download from https://ollama.com/download
+
+**Start Ollama and download a model:**
+```bash
+ollama serve  # Start in background
+ollama pull llama3.2:3b  # Download free AI model (~2GB)
+```
+
+### 6. Configure System Settings
+
+Edit `src/config.py` with your Elasticsearch password:
 
 ```python
-# Elasticsearch configuration
 class ElasticConfig:
     url = 'http://localhost:9200'
-    # If authentication required: url = 'http://elastic:password@localhost:9200'
-
-# API URLs (provided by your teacher, can be used directly)
-EMBEDDING_URL = "http://test.2brain.cn:9800/v1/emb"
-RERANK_URL = "http://test.2brain.cn:2260/rerank"
-IMAGE_MODEL_URL = 'http://test.2brain.cn:23333/v1'
-
-# RAG Configuration
-CHUNK_SIZE = 1024           # Size of each text chunk in tokens
-CHUNK_OVERLAP = 100         # Overlap between chunks
-TOP_K_RETRIEVAL = 10        # Number of documents to retrieve
-TOP_K_RERANK = 5            # Number of documents after reranking
+    username = 'elastic'
+    password = 'YOUR_PASSWORD_HERE'  # From elastic-start-local/.env
 ```
 
 ## 🚀 Usage
 
-### Method 1: Web Interface (Recommended)
+### Quick Start with Web Interface
 
 ```bash
-cd ~/Qishi\ AI/RAG_pdfProcess/src
-python app.py
+# Make sure Elasticsearch and Ollama are running
+# Then start the app:
+./run_app.sh
 ```
 
-Then open your browser to `http://localhost:7860`
+Open your browser to: **http://localhost:7860**
 
-#### Steps:
+### Step-by-Step Workflow
 
-1. **Index Documents**
-   - Go to the "Document Indexing" tab
-   - Upload a PDF file
-   - Set an index name (e.g., `my_knowledge_base`)
-   - Choose whether to extract images and tables
-   - Click "Start Indexing"
+**STEP 1: Create/Select Index**
+- Enter an index name (e.g., `my_documents`)
+- Click "Create/Select Index"
 
-2. **Initialize System**
-   - Go to the "Question & Answer" tab
-   - Enter the index name you created
-   - Optionally enable advanced features
-   - Click "Initialize System"
+**STEP 2: Ingest PDF Documents**
+- Upload one or more PDF files
+- Enable image and table extraction (recommended)
+- Click "Start Ingestion"
+- Watch the progress as each PDF is processed
 
-3. **Ask Questions**
-   - Enter your question
-   - View the answer and sources
+**STEP 3: Query System**
+- Enter your question
+- Click "Search & Answer"
+- Get AI-generated answer with source citations
 
-### Method 2: Python API
+**STEP 4: Settings & Optimization**
+- View current settings
+- Manage indexes
 
-#### Index Documents
+### Python API Usage
 
 ```python
 from indexing import create_and_index
-
-# Index a single PDF
-create_and_index(
-    index_name='my_knowledge_base',
-    pdf_path_or_directory='data/pdfs/example.pdf',
-    extract_images=True,
-    extract_tables=True
-)
-
-# Index an entire directory
-create_and_index(
-    index_name='my_knowledge_base',
-    pdf_path_or_directory='data/pdfs/',
-    extract_images=True,
-    extract_tables=True
-)
-```
-
-#### Query System
-
-```python
 from rag_pipeline import RAGPipeline
 
-# Create pipeline
+# Index documents
+create_and_index(
+    index_name='my_knowledge_base',
+    pdf_path_or_directory='data/pdfs/your_document.pdf',
+    extract_images=True,
+    extract_tables=True
+)
+
+# Query system
 pipeline = RAGPipeline(
     index_name='my_knowledge_base',
     use_multi_query=False,
     use_query_decomposition=False
 )
 
-# Simple query
-result = pipeline.simple_query("What is machine learning?")
+result = pipeline.simple_query("What is this document about?")
 print(result['answer'])
-print(f"Used {result['num_sources']} sources")
-
-# Advanced query (with multi-query and decomposition)
-pipeline_advanced = RAGPipeline(
-    index_name='my_knowledge_base',
-    use_multi_query=True,
-    use_query_decomposition=True
-)
-
-result = pipeline_advanced.query("What is the difference between deep learning and machine learning?")
-print(result['answer'])
+print(f"Sources: {result['num_sources']}")
 ```
 
 ## 📁 Project Structure
 
 ```
-RAG_pdfProcess/
+RagPdfProcessor/
 │
 ├── src/                          # Source code
-│   ├── config.py                 # Configuration file
-│   ├── embedding.py              # Vectorization module
+│   ├── config.py                 # Configuration
+│   ├── embedding.py              # Vectorization
 │   ├── es_functions.py           # Elasticsearch operations
 │   ├── pdf_processor.py          # PDF processing
-│   ├── retrieval.py              # Retrieval module
-│   ├── query_processing.py       # Query processing
+│   ├── retrieval.py              # Hybrid search + reranking
+│   ├── query_processing.py       # Advanced query processing
 │   ├── answer_generation.py      # Answer generation
-│   ├── indexing.py               # Index management
+│   ├── indexing.py               # Document indexing
 │   ├── rag_pipeline.py           # Main pipeline
-│   └── app.py                    # Web interface
+│   ├── app_workflow.py           # Web interface (main)
+│   ├── app_simple.py             # Simplified interface
+│   └── app.py                    # Advanced interface
 │
 ├── data/                         # Data directory
-│   ├── pdfs/                     # PDF files
+│   ├── pdfs/                     # Place your PDF files here
 │   └── images/                   # Extracted images
 │
-├── logs/                         # Logs
-├── requirements.txt              # Dependencies
-└── README.md                     # Documentation
+├── logs/                         # Log files
+├── requirements.txt              # Python dependencies
+├── README.md                     # This file
+├── QUICKSTART.md                 # Quick start guide
+├── PROJECT_SUMMARY.md            # Feature summary
+├── run_app.sh                    # Convenience script to run app
+└── .gitignore                    # Git ignore rules
 ```
 
-## ⚙️ Advanced Configuration
+## ⚙️ Configuration
 
-### Adjust Retrieval Parameters
+### API Endpoints
 
-In `src/config.py`:
+The system is pre-configured with embedding and reranking API endpoints in `src/config.py`:
 
 ```python
-# Text chunking parameters
-CHUNK_SIZE = 1024           # Size of each chunk in tokens
+EMBEDDING_URL = "http://test.2brain.cn:9800/v1/emb"
+RERANK_URL = "http://test.2brain.cn:2260/rerank"
+```
+
+### Elasticsearch Configuration
+
+Update `src/config.py` with your Elasticsearch credentials:
+
+```python
+class ElasticConfig:
+    url = 'http://localhost:9200'
+    username = 'elastic'
+    password = 'YOUR_PASSWORD'  # Get from elastic-start-local/.env
+```
+
+### RAG Parameters
+
+Adjust these in `src/config.py`:
+
+```python
+CHUNK_SIZE = 1024           # Size of each text chunk in tokens
 CHUNK_OVERLAP = 100         # Overlap between chunks
-
-# Vector dimensions
 EMBEDDING_DIM = 1024        # Embedding vector dimension
-
-# Retrieval parameters
-TOP_K_RETRIEVAL = 10        # Initial number of documents to retrieve
-TOP_K_RERANK = 5            # Number of documents after reranking
+TOP_K_RETRIEVAL = 10        # Documents to retrieve initially
+TOP_K_RERANK = 5            # Documents after reranking
 ```
-
-### Custom Stop Words
-
-Modify the `stop_words` set in `src/retrieval.py` to customize keyword extraction.
-
-### Adjust Image Filtering
-
-In `src/pdf_processor.py`, modify the image filtering conditions:
-
-```python
-# Skip small images (likely icons/logos)
-if image_width < page_width / 3 or image_width < 200 or image_height < 100:
-    continue
-```
-
-## 🔧 Troubleshooting
-
-### Elasticsearch Connection Failed
-
-```bash
-# Check if Elasticsearch is running
-curl http://localhost:9200
-
-# Restart Elasticsearch (macOS)
-brew services restart elasticsearch
-
-# Check Elasticsearch logs
-tail -f /usr/local/var/log/elasticsearch.log
-```
-
-### Out of Memory
-
-- Reduce `CHUNK_SIZE`
-- Reduce `TOP_K_RETRIEVAL`
-- Reduce batch size in `embedding.py`
-- Disable image extraction for faster processing
-
-### Image Extraction Fails
-
-- Check if `IMAGE_MODEL_URL` is accessible
-- Set `extract_images=False` to skip image processing
-- Ensure sufficient disk space for image storage
 
 ## 📊 Performance Optimization
 
-1. **Batch Indexing**: Use `index_directory` instead of individual files
-2. **Adjust Batch Size**: Modify `batch_size` in `embedding.py`
-3. **Limit Image Size**: Adjust image filtering in `pdf_processor.py`
-4. **Use SSD**: Store Elasticsearch data on SSD for faster retrieval
-5. **Increase Heap Size**: Configure Elasticsearch JVM heap size for large datasets
+1. **Batch Processing**: Process multiple PDFs at once
+2. **Adjust Chunk Size**: Modify `CHUNK_SIZE` for your use case
+3. **Limit Extraction**: Disable image/table extraction for faster indexing
+4. **Tune Retrieval**: Adjust `TOP_K_RETRIEVAL` and `TOP_K_RERANK` parameters
 
 ## 🤝 Contributing
 
@@ -341,23 +316,14 @@ MIT License
 
 ## 🙏 Acknowledgments
 
-This project uses the following technologies:
-- **Elasticsearch** - Search and vector storage
+This project uses:
+- **Elasticsearch** - Search and vector storage ([Documentation](https://www.elastic.co/docs))
 - **LangChain** - Document processing framework
 - **PyMuPDF** - PDF parsing
 - **Gradio** - Web interface
-- **OpenAI** - LLM services
+- **Ollama** - Free local LLM
 - **Jieba** - Chinese text segmentation
-
-## 📞 Support
-
-For questions and support:
-- Create an issue on GitHub
-- Check the User Guide in the web interface
-- Review the troubleshooting section above
 
 ---
 
-**Author**: Qishi AI  
-**Date**: November 2025  
 **Version**: 1.0.0

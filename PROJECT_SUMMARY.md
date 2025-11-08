@@ -1,15 +1,16 @@
 # Project Summary: RAG PDF Processing System
 
-## 🎉 Project Complete!
+## 🎉 Complete RAG System
 
-A comprehensive RAG (Retrieval-Augmented Generation) system has been successfully created with all requested features.
+A comprehensive RAG (Retrieval-Augmented Generation) system with all enterprise features.
 
 ## ✅ Implemented Features
 
-### 1. Elasticsearch Deployment ✓
-- Configured to work with local Elasticsearch at `http://localhost:9200`
+### 1. Elasticsearch Integration ✓
+- Configured for local Elasticsearch at `http://localhost:9200`
 - Automatic connection with retry logic
 - Index management (create, delete, statistics)
+- Authentication handling
 
 ### 2. PDF Processing ✓
 **Text Extraction:**
@@ -20,8 +21,8 @@ A comprehensive RAG (Retrieval-Augmented Generation) system has been successfull
 **Image Extraction:**
 - Extracts images from PDFs
 - Filters out small images (icons, logos)
-- Generates descriptions using vision model
-- Context augmentation for better understanding
+- Context-based image descriptions
+- Saves extracted images for reference
 
 **Table Extraction:**
 - Extracts tables from PDFs
@@ -36,7 +37,7 @@ A comprehensive RAG (Retrieval-Augmented Generation) system has been successfull
 - Preserves document structure and metadata
 
 ### 4. Vectorization ✓
-- Generates embeddings using provided API (`http://test.2brain.cn:9800/v1/emb`)
+- Generates embeddings using provided API
 - Batch processing for efficiency
 - 1024-dimensional vectors
 - Automatic retry on failure
@@ -54,7 +55,7 @@ A comprehensive RAG (Retrieval-Augmented Generation) system has been successfull
 
 **Keyword Search:**
 - BM25 algorithm
-- Jieba word segmentation for Chinese
+- Jieba word segmentation for Chinese/English
 - Stop word filtering
 - Fuzzy matching support
 
@@ -64,12 +65,13 @@ A comprehensive RAG (Retrieval-Augmented Generation) system has been successfull
 - Deduplication and ranking
 
 ### 7. Reranking ✓
-- Uses reranker model API (`http://test.2brain.cn:2260/rerank`)
+- Uses reranker model API
 - Improves result relevance
 - Configurable top-k selection
 
 ### 8. Answer Generation ✓
-- GPT-4 based answer generation
+- Ollama-based answer generation (FREE)
+- Strict mode: uses ONLY uploaded PDFs
 - Source citation support
 - Context-aware responses
 - Multi-turn conversation support
@@ -93,157 +95,118 @@ A comprehensive RAG (Retrieval-Augmented Generation) system has been successfull
 
 ### 10. User Interface ✓
 - **Gradio Web Interface**
-- Document indexing tab
-- Question answering tab
-- User guide tab
+- Step-by-step workflow (matches common patterns)
+- Document indexing with progress display
+- Question answering with source display
+- Settings and optimization panel
 - Real-time feedback
-- Source display
 - Adjustable parameters
 
 ## 📊 Project Structure
 
 ```
-RAG_pdfProcess/
-├── src/
-│   ├── config.py              # Configuration settings
-│   ├── embedding.py           # Vectorization
-│   ├── es_functions.py        # Elasticsearch operations
-│   ├── pdf_processor.py       # PDF processing (text, images, tables)
-│   ├── retrieval.py           # Hybrid search + reranking
-│   ├── query_processing.py    # RAG Fusion + decomposition
-│   ├── answer_generation.py   # LLM answer generation
-│   ├── indexing.py            # Document indexing
-│   ├── rag_pipeline.py        # Main pipeline
-│   └── app.py                 # Gradio web interface
-├── data/
-│   ├── pdfs/                  # Place your PDF files here
-│   └── images/                # Extracted images stored here
-├── logs/                      # Log files
-├── requirements.txt           # Python dependencies
-├── README.md                  # Full documentation (English)
-├── QUICKSTART.md             # Quick start guide (English)
-├── PROJECT_SUMMARY.md        # This file
-└── .gitignore                # Git ignore rules
+RagPdfProcessor/
+├── src/                     # All Python modules
+│   ├── config.py           # Configuration
+│   ├── embedding.py        # Vectorization
+│   ├── es_functions.py     # Elasticsearch ops
+│   ├── pdf_processor.py    # PDF processing
+│   ├── retrieval.py        # Hybrid search
+│   ├── query_processing.py # Advanced queries
+│   ├── answer_generation.py # Answer generation
+│   ├── indexing.py         # Document indexing
+│   ├── rag_pipeline.py     # Main pipeline
+│   └── app_workflow.py     # Web interface
+├── data/                    # Data files
+│   ├── pdfs/               # PDF storage
+│   └── images/             # Extracted images
+├── README.md               # Full documentation
+├── QUICKSTART.md          # Quick start guide
+├── requirements.txt        # Dependencies
+└── run_app.sh             # Run script
 ```
 
-## 🚀 How to Use
+## 🚀 Quick Start
 
-### Quick Start (3 steps):
+```bash
+# 1. Install Elasticsearch
+curl -fsSL https://elastic.co/start-local | sh
 
-1. **Start Elasticsearch**
-   ```bash
-   brew services start elasticsearch  # macOS
-   ```
+# 2. Install Ollama and model
+ollama pull llama3.2:3b
 
-2. **Launch Web Interface**
-   ```bash
-   cd ~/Qishi\ AI/RAG_pdfProcess/src
-   python app.py
-   ```
+# 3. Clone and setup
+git clone https://github.com/jinjingleayi/RagPdfProcessor.git
+cd RagPdfProcessor
+pip install -r requirements.txt
 
-3. **Open Browser**
-   - Go to `http://localhost:7860`
-   - Upload PDF → Initialize System → Ask Questions!
+# 4. Configure password in src/config.py
 
-### Python API:
-
-```python
-from indexing import create_and_index
-from rag_pipeline import RAGPipeline
-
-# Index documents
-create_and_index('my_index', 'path/to/pdf.pdf')
-
-# Query system
-pipeline = RAGPipeline('my_index')
-result = pipeline.simple_query("Your question here")
-print(result['answer'])
+# 5. Run!
+./run_app.sh
 ```
 
-## 🎯 Key Features Comparison with Teacher's Demo
+## 🎯 Key Features Checklist
 
-| Feature | Implementation Status |
-|---------|---------------------|
-| Local Elasticsearch | ✅ Configured |
-| PDF Text Extraction | ✅ Complete |
-| Image Extraction | ✅ Complete |
-| Table Extraction | ✅ Complete |
-| Content Chunking | ✅ Complete |
-| Vectorization | ✅ Complete |
-| Elasticsearch Indexing | ✅ Complete |
-| Hybrid Search (Vector + Keyword) | ✅ Complete |
-| RRF Fusion | ✅ Complete |
-| Reranker Model | ✅ Complete |
-| Answer Generation | ✅ Complete |
-| Multi-Query Retrieval | ✅ Complete (Optional) |
-| Query Decomposition | ✅ Complete (Optional) |
-| Web Interface | ✅ Complete (Gradio) |
+| Feature | Status |
+|---------|--------|
+| Local Elasticsearch | ✅ |
+| PDF Text Extraction | ✅ |
+| Image Extraction | ✅ |
+| Table Extraction | ✅ |
+| Content Chunking | ✅ |
+| Vectorization | ✅ |
+| Elasticsearch Indexing | ✅ |
+| Hybrid Search | ✅ |
+| RRF Fusion | ✅ |
+| Reranker Model | ✅ |
+| Answer Generation | ✅ |
+| Multi-Query Retrieval | ✅ |
+| Query Decomposition | ✅ |
+| Web Interface | ✅ |
+| FREE LLM (Ollama) | ✅ |
 
-## 📝 All Code and Documentation in English
+## 📝 All Code in English
 
 ✅ All Python code with English comments  
-✅ All function and variable names in English  
-✅ All docstrings in English  
-✅ README in English  
-✅ Quick Start Guide in English  
+✅ All documentation in English  
+✅ Function and variable names in English  
+✅ Docstrings in English  
 ✅ Web interface in English  
 
-## 🔧 Configuration
+## 🔧 Technology Stack
 
-All settings can be adjusted in `src/config.py`:
-- Elasticsearch URL
-- API endpoints (embedding, reranking, vision model)
-- Chunk size and overlap
-- Retrieval parameters
-- OpenAI settings
-
-## 📚 Documentation
-
-- **README.md**: Comprehensive documentation with architecture, installation, and usage
-- **QUICKSTART.md**: Quick start guide for immediate testing
-- **PROJECT_SUMMARY.md**: This file - overview of all features
-- **In-app User Guide**: Available in the web interface
-
-## 🎓 Technical Stack
-
-- **Elasticsearch 8.x**: Vector storage and search
+- **Elasticsearch 9.x**: Vector storage and hybrid search
 - **Python 3.8+**: Core language
-- **LangChain**: Document processing
+- **LangChain**: Document processing framework
 - **PyMuPDF (fitz)**: PDF parsing
 - **Gradio**: Web interface
-- **OpenAI API**: LLM for answers
-- **Jieba**: Chinese text segmentation
-- **tiktoken**: Token counting
+- **Ollama**: Free local LLM
+- **Jieba**: Text segmentation
 
 ## 🌟 Highlights
 
 1. **Complete Pipeline**: From PDF to answer in one system
 2. **Multimodal**: Handles text, images, and tables
-3. **Hybrid Search**: Best of both worlds (semantic + keyword)
-4. **Production Ready**: Error handling, retry logic, logging
-5. **User Friendly**: Both web interface and Python API
-6. **Extensible**: Easy to customize and extend
-7. **Well Documented**: Comprehensive English documentation
-
-## 🎯 Next Steps
-
-1. Test with your PDF documents
-2. Adjust parameters for optimal results
-3. Enable advanced features (multi-query, decomposition) as needed
-4. Monitor performance and optimize as required
+3. **Hybrid Search**: Semantic + keyword search combined
+4. **FREE**: Uses local Ollama LLM (no API costs)
+5. **Production Ready**: Error handling, retry logic, logging
+6. **User Friendly**: Step-by-step web interface
+7. **Extensible**: Easy to customize and extend
+8. **Well Documented**: Comprehensive English documentation
 
 ## 💡 Tips
 
-- Start with simple queries to test the system
-- Use text-only extraction first for faster testing
-- Enable image/table extraction for comprehensive coverage
-- Adjust retrieval parameters based on your use case
-- Monitor Elasticsearch memory usage with large datasets
+- Start with test PDFs to familiarize yourself
+- Enable image/table extraction for complete coverage
+- Adjust retrieval parameters based on your needs
+- Monitor Elasticsearch memory with large datasets
+- Use virtual environment for clean dependency management
 
 ---
 
-**Status**: ✅ All requirements implemented  
-**Language**: English (code, comments, documentation)  
-**Ready for**: Production use, testing, and customization
+**Status**: ✅ Production ready  
+**Language**: English (code, comments, docs)  
+**License**: MIT  
 
-Enjoy your RAG system! 🚀
+Ready for deployment and customization! 🚀

@@ -2,174 +2,171 @@
 
 Get started with the RAG PDF Processing System in minutes!
 
-## Prerequisites Check
+## Prerequisites
 
 Before starting, ensure you have:
 - ✅ Python 3.8 or higher installed
-- ✅ Elasticsearch 8.x running at `http://localhost:9200`
+- ✅ Git installed
 
-### Check Elasticsearch
+## Installation Steps
 
+### 1. Install Elasticsearch
+
+Elasticsearch provides powerful vector search capabilities for RAG systems.
+
+```bash
+# Quick installation (local development)
+curl -fsSL https://elastic.co/start-local | sh
+```
+
+For more details, see the [official Elasticsearch local development guide](https://www.elastic.co/docs/deploy-manage/deploy/self-managed/local-development-installation-quickstart).
+
+**Verify Elasticsearch is running:**
 ```bash
 curl http://localhost:9200
 ```
 
-You should see a JSON response with cluster information.
+**Get your credentials:**
+```bash
+cat elastic-start-local/.env | grep ES_LOCAL_PASSWORD
+cat elastic-start-local/.env | grep ES_LOCAL_API_KEY
+```
 
-## Installation Steps
+### 2. Install Ollama (FREE Local LLM)
 
-### 1. Install Dependencies
+**macOS:**
+```bash
+brew install ollama
+# Or download from: https://ollama.com/download
+```
+
+**Linux:**
+```bash
+curl -fsSL https://ollama.com/install.sh | sh
+```
+
+**Start Ollama and download model:**
+```bash
+ollama serve &  # Start service
+ollama pull llama3.2:3b  # Download model (~2GB)
+```
+
+### 3. Clone and Setup Project
 
 ```bash
-cd ~/Qishi\ AI/RAG_pdfProcess
+# Clone repository
+git clone https://github.com/jinjingleayi/RagPdfProcessor.git
+cd RagPdfProcessor
+
+# Create virtual environment (recommended)
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Configure API Keys
+### 4. Configure Elasticsearch Password
 
-Create a `.env` file or edit `src/config.py` with your OpenAI API key:
-
-```bash
-# Create .env file
-echo "OPENAI_API_KEY=your-api-key-here" > .env
-echo "OPENAI_BASE_URL=https://api.openai.com/v1" >> .env
-```
-
-### 3. Test Elasticsearch Connection
-
-```bash
-cd src
-python -c "from config import get_es; es = get_es(); print('✅ Elasticsearch connected!')"
-```
-
-## Quick Test
-
-### Option 1: Use the Web Interface (Easiest)
-
-```bash
-cd src
-python app.py
-```
-
-Then:
-1. Open `http://localhost:7860` in your browser
-2. Upload a PDF in the "Document Indexing" tab
-3. Go to "Question & Answer" tab
-4. Initialize the system
-5. Ask questions!
-
-### Option 2: Use Python Code
+Edit `src/config.py` and update the password:
 
 ```python
-cd src
-python
+class ElasticConfig:
+    url = 'http://localhost:9200'
+    username = 'elastic'
+    password = 'YOUR_PASSWORD_HERE'  # From elastic-start-local/.env
 ```
 
-Then run:
+## 🚀 Run the Application
+
+```bash
+./run_app.sh
+```
+
+Or manually:
+
+```bash
+source venv/bin/activate
+cd src
+python app_workflow.py
+```
+
+Then open your browser to: **http://localhost:7860**
+
+## 📝 Quick Test
+
+### Option 1: Use Test PDFs (Fastest)
+
+1. **STEP 1**: Enter index name → `my_documents` → Click "Create/Select Index"
+2. **STEP 2**: Click "📂 Ingest Test PDFs" button
+3. **STEP 3**: Ask a question → "What is in these documents?"
+4. **Get Answer!** ✅
+
+### Option 2: Use Your Own PDFs
+
+1. **STEP 1**: Create index
+2. **STEP 2**: Upload your PDF files (multiple allowed)
+3. **STEP 3**: Ask questions about your documents
+
+## 💡 Tips for Best Results
+
+- ✅ Enable image and table extraction for comprehensive coverage
+- ✅ Ask specific, clear questions
+- ✅ Check source documents to verify answers
+- ✅ Use higher retrieval counts for complex queries
+
+## ⚙️ Configuration Options
+
+Edit `src/config.py` to customize:
 
 ```python
-# Import modules
-from indexing import create_and_index
-from rag_pipeline import RAGPipeline
+# Text chunking
+CHUNK_SIZE = 1024
+CHUNK_OVERLAP = 100
 
-# Index a PDF (replace with your PDF path)
-create_and_index(
-    index_name='test_index',
-    pdf_path_or_directory='../data/pdfs/your_document.pdf',
-    extract_images=False,  # Set to True if you want image extraction
-    extract_tables=False    # Set to True if you want table extraction
-)
+# Retrieval
+TOP_K_RETRIEVAL = 10
+TOP_K_RERANK = 5
 
-# Create pipeline
-pipeline = RAGPipeline(index_name='test_index')
-
-# Ask a question
-result = pipeline.simple_query("What is this document about?")
-print(result['answer'])
+# API endpoints (pre-configured)
+EMBEDDING_URL = "http://test.2brain.cn:9800/v1/emb"
+RERANK_URL = "http://test.2brain.cn:2260/rerank"
 ```
 
-## Common Issues
+## 🔧 Common Issues
 
-### Issue: Elasticsearch not running
-
-**Solution:**
+**Elasticsearch not accessible:**
 ```bash
-# macOS
-brew services start elasticsearch
+# Check if running
+curl http://localhost:9200
 
-# Linux - if installed via tar.gz
-cd elasticsearch-8.11.0/
-./bin/elasticsearch
+# Restart if needed
+docker restart $(docker ps -q)
 ```
 
-### Issue: Port 7860 already in use
+**Ollama not responding:**
+```bash
+# Check if Ollama is running
+ollama list
 
-**Solution:**
-Edit `src/app.py` and change the port:
+# Start if needed
+ollama serve
+```
+
+**Port 7860 already in use:**
+
+Edit `src/app_workflow.py`, change the port:
 ```python
-demo.launch(share=False, server_name="0.0.0.0", server_port=7861)  # Change 7860 to 7861
+demo.launch(share=False, server_name="0.0.0.0", server_port=7861)
 ```
 
-### Issue: Module not found
+## 📚 Next Steps
 
-**Solution:**
-```bash
-pip install -r requirements.txt --upgrade
-```
+- Read the full [README.md](README.md) for detailed documentation
+- Check [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) for complete feature list
+- Explore the code in `src/` directory
+- Try the advanced features (multi-query, decomposition)
 
-### Issue: Out of memory during indexing
-
-**Solution:**
-- Start with image/table extraction disabled
-- Process smaller PDFs first
-- Reduce batch size in `src/embedding.py`
-
-## Next Steps
-
-1. **Read the full documentation**: See `README.md`
-2. **Explore advanced features**: Try multi-query retrieval and query decomposition
-3. **Optimize performance**: Adjust parameters in `src/config.py`
-4. **Add more documents**: Index multiple PDFs into the same index
-
-## Example Workflow
-
-```bash
-# 1. Start Elasticsearch (if not running)
-brew services start elasticsearch
-
-# 2. Navigate to project
-cd ~/Qishi\ AI/RAG_pdfProcess
-
-# 3. Install dependencies (first time only)
-pip install -r requirements.txt
-
-# 4. Place your PDF files in data/pdfs/
-cp ~/Documents/my_document.pdf data/pdfs/
-
-# 5. Start the web interface
-cd src
-python app.py
-
-# 6. Open browser to http://localhost:7860
-
-# 7. Follow the web interface instructions to:
-#    - Index your PDF
-#    - Initialize the system
-#    - Ask questions!
-```
-
-## Tips for Best Results
-
-1. **Start Simple**: Begin with text-only extraction (no images/tables) for faster testing
-2. **Use Good PDFs**: Text-based PDFs work best (scanned PDFs may need OCR)
-3. **Clear Questions**: Ask specific, clear questions for better answers
-4. **Adjust Parameters**: Experiment with retrieval parameters for optimal results
-5. **Monitor Resources**: Watch memory usage when processing large PDFs
-
-## Need Help?
-
-- Check the full `README.md` for detailed documentation
-- Review the User Guide in the web interface
-- Check Elasticsearch logs: `/usr/local/var/log/elasticsearch.log` (macOS)
+---
 
 Happy querying! 🚀
